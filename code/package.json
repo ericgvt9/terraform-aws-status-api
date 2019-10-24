@@ -1,0 +1,20 @@
+{
+  "name": "status-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "DB_TABLE_NAME=rest-api-status-db jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.553.0",
+    "middy": "^0.30.3"
+  },
+  "devDependencies": {
+    "dynamodb-local": "0.0.30",
+    "jest": "^24.9.0"
+  }
+}
