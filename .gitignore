@@ -3,4 +3,4 @@ node_modules/
 terraform.tfvars
 terraform.tfstate
 terraform.tfstate.backup
-./infrastructure/code.zip
+code.zip
