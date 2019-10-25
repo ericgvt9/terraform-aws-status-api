@@ -3,10 +3,17 @@ provider "aws" {
   region  = "${var.aws_region}"
 }
 
+resource "null_resource" "install_code_dep" {
+  provisioner "local-exec" {
+    command = "cd code && npm install --production"
+  }
+}
+
 data "archive_file" "build_code" {
   type        = "zip"
   source_dir  = "code"
   output_path = "code.zip"
+  depends_on  = ["null_resource.install_code_dep"]
 }
 
 resource "aws_lambda_function" "get_status_fn" {
