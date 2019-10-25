@@ -58,7 +58,7 @@ resource "aws_api_gateway_integration" "post_status_integration" {
   http_method             = "${aws_api_gateway_method.post_status.http_method}"
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
-  uri                     = "${aws_lambda_function.get_status_fn.invoke_arn}"
+  uri                     = "${aws_lambda_function.update_status_fn.invoke_arn}"
   passthrough_behavior    = "WHEN_NO_MATCH"
 
   request_parameters = {
@@ -80,6 +80,17 @@ resource "aws_lambda_permission" "apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = "${aws_lambda_function.get_status_fn.function_name}"
+  principal     = "apigateway.amazonaws.com"
+
+  # The "/*/*" portion grants access from any method on any resource
+  # within the API Gateway REST API.
+  source_arn = "${aws_api_gateway_rest_api.rest_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "update_status_permission" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = "${aws_lambda_function.update_status_fn.function_name}"
   principal     = "apigateway.amazonaws.com"
 
   # The "/*/*" portion grants access from any method on any resource

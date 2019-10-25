@@ -10,12 +10,32 @@ data "archive_file" "build_code" {
 }
 
 resource "aws_lambda_function" "get_status_fn" {
-  function_name    = "ServerlessExample"
+  function_name    = "${var.module_name}_${var.stage}_get_status"
+  description      = "Gets status of a document using document id from dynamodb"
   filename         = "code.zip"
   source_code_hash = "${data.archive_file.build_code.output_sha}"
   depends_on       = ["data.archive_file.build_code", "aws_cloudwatch_log_group.example"]
 
   handler = "index.getStatusHandler"
+  runtime = "nodejs10.x"
+
+  environment {
+    variables = {
+      DB_TABLE_NAME = "${aws_dynamodb_table.status_db.id}"
+    }
+  }
+
+  role = "${aws_iam_role.lambda_exec.arn}"
+}
+
+resource "aws_lambda_function" "update_status_fn" {
+  function_name    = "${var.module_name}_${var.stage}_update_status"
+  description      = "Updates status of a document using document id in dynamodb"
+  filename         = "code.zip"
+  source_code_hash = "${data.archive_file.build_code.output_sha}"
+  depends_on       = ["data.archive_file.build_code", "aws_cloudwatch_log_group.example"]
+
+  handler = "index.updateStatusHandler"
   runtime = "nodejs10.x"
 
   environment {
