@@ -9,7 +9,7 @@ data "archive_file" "build_code" {
   output_path = "code.zip"
 }
 
-resource "aws_lambda_function" "example" {
+resource "aws_lambda_function" "get_status_fn" {
   function_name    = "ServerlessExample"
   filename         = "code.zip"
   source_code_hash = "${data.archive_file.build_code.output_sha}"

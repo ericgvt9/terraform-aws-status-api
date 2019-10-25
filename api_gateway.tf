@@ -1,24 +1,24 @@
 
-resource "aws_api_gateway_rest_api" "example" {
+resource "aws_api_gateway_rest_api" "rest_api" {
   name        = "${var.module_name}"
-  description = "Terraform Serverless Application Example"
+  description = "${var.module_name} - Status Checking API Gateway"
 }
 
 resource "aws_api_gateway_resource" "status" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-  parent_id   = "${aws_api_gateway_rest_api.example.root_resource_id}"
+  rest_api_id = "${aws_api_gateway_rest_api.rest_api.id}"
+  parent_id   = "${aws_api_gateway_rest_api.rest_api.root_resource_id}"
   path_part   = "status"
 }
 
-resource "aws_api_gateway_resource" "statusId" {
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+resource "aws_api_gateway_resource" "status_id" {
+  rest_api_id = "${aws_api_gateway_rest_api.rest_api.id}"
   parent_id   = "${aws_api_gateway_resource.status.id}"
   path_part   = "{id}"
 }
 
 resource "aws_api_gateway_method" "get_status" {
-  rest_api_id   = "${aws_api_gateway_rest_api.example.id}"
-  resource_id   = "${aws_api_gateway_resource.statusId.id}"
+  rest_api_id   = "${aws_api_gateway_rest_api.rest_api.id}"
+  resource_id   = "${aws_api_gateway_resource.status_id.id}"
   http_method   = "GET"
   authorization = "NONE"
 
@@ -27,13 +27,24 @@ resource "aws_api_gateway_method" "get_status" {
   }
 }
 
+resource "aws_api_gateway_method" "post_status" {
+  rest_api_id   = "${aws_api_gateway_rest_api.rest_api.id}"
+  resource_id   = "${aws_api_gateway_resource.status_id.id}"
+  http_method   = "POST"
+  authorization = "NONE"
+
+  request_parameters = {
+    "method.request.path.id" = true
+  }
+}
+
 resource "aws_api_gateway_integration" "get_status_integration" {
-  rest_api_id             = "${aws_api_gateway_rest_api.example.id}"
-  resource_id             = "${aws_api_gateway_resource.statusId.id}"
+  rest_api_id             = "${aws_api_gateway_rest_api.rest_api.id}"
+  resource_id             = "${aws_api_gateway_resource.status_id.id}"
   http_method             = "${aws_api_gateway_method.get_status.http_method}"
   type                    = "AWS_PROXY"
   integration_http_method = "POST"
-  uri                     = "${aws_lambda_function.example.invoke_arn}"
+  uri                     = "${aws_lambda_function.get_status_fn.invoke_arn}"
   passthrough_behavior    = "WHEN_NO_MATCH"
 
   request_parameters = {
@@ -41,26 +52,41 @@ resource "aws_api_gateway_integration" "get_status_integration" {
   }
 }
 
-resource "aws_api_gateway_deployment" "example" {
+resource "aws_api_gateway_integration" "post_status_integration" {
+  rest_api_id             = "${aws_api_gateway_rest_api.rest_api.id}"
+  resource_id             = "${aws_api_gateway_resource.status_id.id}"
+  http_method             = "${aws_api_gateway_method.post_status.http_method}"
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = "${aws_lambda_function.get_status_fn.invoke_arn}"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+
+  request_parameters = {
+    "integration.request.path.id" = "method.request.path.id"
+  }
+}
+
+resource "aws_api_gateway_deployment" "rest_api" {
   depends_on = [
-    "aws_api_gateway_integration.get_status_integration"
+    "aws_api_gateway_integration.get_status_integration",
+    "aws_api_gateway_integration.post_status_integration"
   ]
 
-  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  rest_api_id = "${aws_api_gateway_rest_api.rest_api.id}"
   stage_name  = "${var.stage}"
 }
 
 resource "aws_lambda_permission" "apigw" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.example.function_name}"
+  function_name = "${aws_lambda_function.get_status_fn.function_name}"
   principal     = "apigateway.amazonaws.com"
 
   # The "/*/*" portion grants access from any method on any resource
   # within the API Gateway REST API.
-  source_arn = "${aws_api_gateway_rest_api.example.execution_arn}/*/*"
+  source_arn = "${aws_api_gateway_rest_api.rest_api.execution_arn}/*/*"
 }
 
 output "base_url" {
-  value = "${aws_api_gateway_deployment.example.invoke_url}"
+  value = "${aws_api_gateway_deployment.rest_api.invoke_url}"
 }
