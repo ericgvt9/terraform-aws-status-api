@@ -3,10 +3,17 @@ provider "aws" {
   region  = "${var.aws_region}"
 }
 
+resource "null_resource" "install_code" {
+  provisioner "local-exec" {
+    command = "git clone https://github.com/Open-Attestation/status-api.git && mv status-api code"
+  }
+}
+
 resource "null_resource" "install_code_dep" {
   provisioner "local-exec" {
     command = "cd code && npm install --production"
   }
+  depends_on  = ["null_resource.install_code"]
 }
 
 data "archive_file" "build_code" {
