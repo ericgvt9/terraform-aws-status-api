@@ -28,10 +28,11 @@ resource "aws_api_gateway_method" "get_status" {
 }
 
 resource "aws_api_gateway_method" "post_status" {
-  rest_api_id   = "${aws_api_gateway_rest_api.rest_api.id}"
-  resource_id   = "${aws_api_gateway_resource.status_id.id}"
-  http_method   = "POST"
-  authorization = "NONE"
+  rest_api_id      = "${aws_api_gateway_rest_api.rest_api.id}"
+  resource_id      = "${aws_api_gateway_resource.status_id.id}"
+  http_method      = "POST"
+  authorization    = "NONE"
+  api_key_required = true
 
   request_parameters = {
     "method.request.path.id" = true
@@ -100,4 +101,25 @@ resource "aws_lambda_permission" "update_status_permission" {
 
 output "base_url" {
   value = "${aws_api_gateway_deployment.rest_api.invoke_url}"
+}
+
+resource "aws_api_gateway_usage_plan" "default_usage_plan" {
+  name        = "status-api-default-plan"
+  description = "default usage plan for status-api for POST requests"
+
+  api_stages {
+    api_id = "${aws_api_gateway_rest_api.rest_api.id}"
+    stage  = "${aws_api_gateway_deployment.rest_api.stage_name}"
+  }
+}
+
+resource "aws_api_gateway_api_key" "default_api_key" {
+  name        = "Default Status API Key"
+  description = "Default API key generated to POST to status API"
+}
+
+resource "aws_api_gateway_usage_plan_key" "default_usage_plan_key" {
+  key_id        = "${aws_api_gateway_api_key.default_api_key.id}"
+  key_type      = "API_KEY"
+  usage_plan_id = "${aws_api_gateway_usage_plan.default_usage_plan.id}"
 }
