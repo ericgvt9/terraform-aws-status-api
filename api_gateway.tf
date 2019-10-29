@@ -99,10 +99,6 @@ resource "aws_lambda_permission" "update_status_permission" {
   source_arn = "${aws_api_gateway_rest_api.rest_api.execution_arn}/*/*"
 }
 
-output "base_url" {
-  value = "${aws_api_gateway_deployment.rest_api.invoke_url}"
-}
-
 resource "aws_api_gateway_usage_plan" "default_usage_plan" {
   name        = "status-api-default-plan"
   description = "default usage plan for status-api for POST requests"
