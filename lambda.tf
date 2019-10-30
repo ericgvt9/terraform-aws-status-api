@@ -18,6 +18,7 @@ resource "null_resource" "install_code_dep" {
 
 resource "null_resource" "install_cleanup" {
   provisioner "local-exec" {
+    when    = "destroy"
     command = "rm code.zip && rm -rf code"
   }
   depends_on = ["aws_lambda_function.get_status_fn", "aws_lambda_function.update_status_fn"]
