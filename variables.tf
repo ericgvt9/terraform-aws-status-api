@@ -20,5 +20,4 @@ variable "stage" {
   type        = "string"
   default     = "dev"
   description = "Stage to deploy to on AWS Gateway"
-
 }
