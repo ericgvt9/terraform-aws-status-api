@@ -100,7 +100,7 @@ resource "aws_lambda_permission" "update_status_permission" {
 }
 
 resource "aws_api_gateway_usage_plan" "default_usage_plan" {
-  name        = "status-api-default-plan"
+  name        = "${var.module_name}_${var.stage}_default_usage_plan"
   description = "default usage plan for status-api for POST requests"
 
   api_stages {
@@ -110,7 +110,7 @@ resource "aws_api_gateway_usage_plan" "default_usage_plan" {
 }
 
 resource "aws_api_gateway_api_key" "default_api_key" {
-  name        = "Default Status API Key"
+  name        = "${var.module_name}_${var.stage}_default_key"
   description = "Default API key generated to POST to status API"
 }
 
